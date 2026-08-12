@@ -28,49 +28,90 @@
 <script>
   var numberOfFiles = 0;
   const downloadWebsite = document.getElementsByClassName('btn-success')[0];
+  const downloadBtn = document.getElementById('download');
+  const websiteInput = document.getElementById('website');
+  const progressBar = document.getElementById('progress');
+  const filesLine = document.getElementById('nFilesP');
+  const filesCount = document.getElementById('nFiles');
+  // Looked up once. This used to be declared inside one branch of the handler
+  // while the other branches relied on the browser's implicit window global.
+  const log = document.getElementById('log');
+
   // connect to current socket.io server
   var socket = io.connect(document.URL);
   if(!localStorage['token'])
   localStorage['token']=generateToken(20);
-  
+
   // wait for events for this token
   socket.on(localStorage['token'],(event)=>{
   console.log(event)
-  document.getElementById('progress').hidden=false;
+
+  // The server now says so when a download fails, instead of reporting an
+  // empty archive as a finished download.
+  if(event.error)
+  {
+       progressBar.hidden=true;
+       log.textContent='';
+       const failure=document.createElement('strong');
+       failure.style.color='#c0392b';
+       failure.textContent=event.error;
+       log.appendChild(failure);
+       downloadBtn.disabled=false;
+       return;
+  }
+
+  progressBar.hidden=false;
   if(event.progress=="Converting")
   {
-    log.innerHTML=(`<h5>100%! Compressing your website...</h5><br>`)
+    log.textContent='100%! Compressing your website...'
 
   }
    else if(event.progress=="Completed")
    {
-        document.getElementById('progress').hidden=true;
-        log.innerHTML=(`<code>Compressing completed successfully !</code><br>`)
-        downloadWebsite.style='display:'
+        progressBar.hidden=true;
+        log.textContent='Compressing completed successfully !'
+        downloadWebsite.style.display=''
         downloadWebsite.onclick=function()
         {
          window.location='/sites/'+event.file+".zip";
         }
+        downloadBtn.disabled=false;
 
    }
    else
    {
-        const log = document.getElementById('log');
         if(event.progress.includes('200 OK'))
-        numberOfFiles++;
-        document.getElementById('nFilesP').hidden=false;
-        document.getElementById('nFiles').innerHTML=numberOfFiles
-        log.innerHTML=(`<code> ${event.progress}</code><br>`)
+        {
+            numberOfFiles++;
+        }
+        filesLine.hidden=false;
+        filesCount.textContent=numberOfFiles
+        // textContent, not innerHTML: this text comes from the site being
+        // downloaded and should never be parsed as markup.
+        log.textContent=event.progress
    }
   })
-  
+
   // Download a website on click
-   const downloadBtn =  document.getElementById("download");
-   downloadBtn.onclick=()=>{
-        var website = document.getElementById('website').value
+   function startDownload()
+   {
+        var website = websiteInput.value
+        if(!website.trim()) return;
         console.log("Now downloading the website ... %s",website)
+        numberOfFiles=0;
+        filesCount.textContent='0';
+        log.textContent='';
+        downloadWebsite.style.display='none';
+        downloadBtn.disabled=true;
         socket.emit('request', { token: localStorage['token'] , website});
    }
+   downloadBtn.onclick=startDownload;
+   // Pressing Enter used to submit the form to /search, which does not exist
+   // and returned a 404 page.
+   document.getElementById('downloadForm').addEventListener('submit',(e)=>{
+        e.preventDefault();
+        startDownload();
+   });
 
 
 

@@ -34,6 +34,14 @@ Download the complete source code of any website (including all assets) 🔨.
 [![Deploy to Render](https://binbashbanana.github.io/deploy-buttons/buttons/remade/render.svg)](https://render.com/deploy?repo=https://github.com/AhmadIbrahiim/Website-downloader)
 
 
+## Requirements 📦
+
+- Node.js 16 or newer
+- `wget` on the `PATH`. The app shells out to it, and nothing will download without it:
+  - Debian/Ubuntu: `apt install wget`
+  - macOS: `brew install wget`
+  - Windows: `winget install JernejSimoncic.Wget`
+
 ## How to run it 🤔
 
 - `git clone https://github.com/AhmadIbrahiim/Website-downloader.git`
@@ -41,6 +49,14 @@ Download the complete source code of any website (including all assets) 🔨.
 - `$ npm install`
 - `$ npm start`
 - `http://localhost:3000/`
+
+### Optional settings
+
+| Variable | Default | What it does |
+| --- | --- | --- |
+| `PORT` | `3000` | Port the server listens on |
+| `DOWNLOAD_QUOTA` | `100m` | Size ceiling passed to wget, so one request cannot fill the disk |
+| `DOWNLOAD_TIMEOUT_MS` | `300000` | How long a single download may run before it is stopped |
 
 
 
